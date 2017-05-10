@@ -15,16 +15,16 @@
   -->
 
 <resources>
-    <!-- AlertDialog Update Available -->
+    <!-- AlertDialog UpdateInfo Available -->
     <string name="appverupdate_update_available">Available a new update!</string>
     <string name="appverupdater_content_update_available">Update %1$s mobile app to version %2$s</string>
     <string name="appverupdater_notes_update_available">Update %1$s mobile app to version %2$s \nFeatures: \n%3$s</string>
     <string name="appverupdater_positivetext_update_available">Update</string>
     <string name="appverupdater_negativetext_update_available">Later</string>
-    <!-- AlertDialog Not Update Available -->
+    <!-- AlertDialog Not UpdateInfo Available -->
     <string name="appverupdate_not_update_available">No updates available!</string>
     <string name="appverupdater_content_not_update_available">You have the latest version of the application</string>
-    <!-- ProgressDialog Update Available -->
+    <!-- ProgressDialog UpdateInfo Available -->
     <string name="appverupdater_progressdialog_message_update_available">Download</string>
     <!-- AlertDialog Denied Permissin -->
     <string name="appverupdater_denied_message">If you reject permission,you can not use this service</string>

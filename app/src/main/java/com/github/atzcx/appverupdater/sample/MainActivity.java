@@ -26,8 +26,8 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.github.atzcx.appverupdater.AppVerUpdater;
-import com.github.atzcx.appverupdater.Callback;
-import com.github.atzcx.appverupdater.enums.UpdateErrors;
+import com.github.atzcx.appverupdater.callback.Callback;
+import com.github.atzcx.appverupdater.UpdateErrors;
 import com.mikepenz.iconics.IconicsDrawable;
 import com.mikepenz.material_design_iconic_typeface_library.MaterialDesignIconic;
 
@@ -58,16 +58,14 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
         update();
 
     }
 
-
     private void update(){
 
         appVerUpdater = new AppVerUpdater(MainActivity.this)
-                .setUpdateJSONUrl("")
+                .setUpdateJSONUrl("http://192.168.0.110/update.json")
                 .setShowNotUpdated(true)
                 .setViewNotes(false)
                 .setCallback(new Callback() {
@@ -92,10 +90,10 @@ public class MainActivity extends AppCompatActivity {
 
                     }
                 })
+                .setAlertDialogCancelable(true)
                 .build();
 
     }
-
 
     @Override
     protected void onResume() {

@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-package com.github.atzcx.appverupdater;
+package com.github.atzcx.appverupdater.callback;
 
+import com.github.atzcx.appverupdater.UpdateErrors;
 
-public class Constans {
+public interface Callback {
 
-    public static final String TAG = "AppVerUpdater";
+    void onFailure(UpdateErrors error);
 
 }

@@ -17,21 +17,10 @@
 package com.github.atzcx.appverupdater;
 
 import android.app.ProgressDialog;
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Environment;
-import android.util.Log;
-import android.widget.Toast;
 
-import com.github.atzcx.appverupdater.enums.UpdateErrors;
-import com.github.atzcx.appverupdater.interfaces.DownloadListener;
-import com.github.atzcx.appverupdater.interfaces.RequestListener;
-import com.github.atzcx.appverupdater.models.Update;
-import com.github.atzcx.appverupdater.utils.DialogUtils;
-import com.github.atzcx.appverupdater.utils.UpdaterUtils;
 import com.thin.downloadmanager.DownloadRequest;
 import com.thin.downloadmanager.DownloadStatusListenerV1;
 import com.thin.downloadmanager.ThinDownloadManager;
@@ -41,8 +30,6 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
@@ -51,7 +38,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class AsyncClient {
+class HttpClient {
 
 
     /**
@@ -62,12 +49,12 @@ public class AsyncClient {
 
         private Context context;
         private String url;
-        private RequestListener listener;
+        private HttpCallback<UpdateInfo> listener;
         private OkHttpClient client;
         private Response response;
         private Request request;
 
-        public AsyncStringRequest(Context context, String url, RequestListener listener) {
+        public AsyncStringRequest(Context context, String url, HttpCallback<UpdateInfo> listener) {
             this.context = context;
             this.url = url;
             this.listener = listener;
@@ -81,7 +68,7 @@ public class AsyncClient {
 
             if (listener == null || context == null || client == null) {
                 return;
-            } else if (UpdaterUtils.isNetworkAvailable(context)) {
+            } else if (LibraryUtils.isNetworkAvailable(context)) {
                 if (url == null || url.length() == 0) {
                     throw new RuntimeException("Argument Url cannot be null or empty");
                 }
@@ -108,7 +95,9 @@ public class AsyncClient {
                         if (response != null) {
                             try {
 
-                                Update updateModel = JSONParser.parse(new JSONObject(response.body().string()));
+                                UpdateInfo updateModel = JSONParser.parse(new JSONObject(
+                                        response.body().string())
+                                );
 
                                 if (updateModel != null) {
                                     listener.onSuccess(updateModel);
@@ -147,18 +136,23 @@ public class AsyncClient {
 
         private CharSequence message;
         private String downloadFileName;
-        private DownloadListener listener;
+        private HttpCallback<File> listener;
         private ProgressDialog progressDialog;
 
         private DownloadRequest downloadRequest;
 
-        public AsyncDownloadRequest(final Context context, String url, CharSequence message, String downloadFileName, DownloadListener listener) {
+        public AsyncDownloadRequest(final Context context, String url, CharSequence message,
+                                    String downloadFileName, HttpCallback<File> listener) {
             this.context = context;
             this.url = url;
             this.message = message;
             this.downloadFileName = downloadFileName;
             this.listener = listener;
-            this.progressDialog = DialogUtils.showDownloadProgressDialog(context, this.message);
+            this.progressDialog = new ProgressDialog(context);
+            this.progressDialog.setMessage(this.message);
+            this.progressDialog.setIndeterminate(true);
+            this.progressDialog.setCanceledOnTouchOutside(false);
+            this.progressDialog.setCancelable(false);
         }
 
 
@@ -166,7 +160,7 @@ public class AsyncClient {
 
             if (listener == null || context == null) {
                 return;
-            } else if (UpdaterUtils.isNetworkAvailable(context)) {
+            } else if (LibraryUtils.isNetworkAvailable(context)) {
                 if (url == null || url.length() == 0) {
                     throw new RuntimeException("Argument Url cannot be null or empty");
                 }
@@ -179,7 +173,8 @@ public class AsyncClient {
 
             Uri downloadUri = Uri.parse(this.url);
 
-            final File SDCardRoot = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/Download");
+            final File SDCardRoot = new File(Environment.getExternalStorageDirectory()
+                    .getAbsolutePath() + "/Download");
 
              if (SDCardRoot.exists() == false) {
                  SDCardRoot.mkdirs();
@@ -204,14 +199,17 @@ public class AsyncClient {
                 }
 
                 @Override
-                public void onDownloadFailed(DownloadRequest downloadRequest, int errorCode, String errorMessage) {
+                public void onDownloadFailed(DownloadRequest downloadRequest, int errorCode,
+                                             String errorMessage) {
                     listener.onFailure(UpdateErrors.ERROR_DOWNLOADING_UPDATES);
                     AsyncDownloadRequest.this.progressDialog.dismiss();
                 }
 
                 @Override
-                public void onProgress(DownloadRequest downloadRequest, long totalBytes, long downloadedBytes, int progress) {
-                    AsyncDownloadRequest.this.progressDialog.setMessage(AsyncDownloadRequest.this.message + " - " + progress + "%");
+                public void onProgress(DownloadRequest downloadRequest, long totalBytes,
+                                       long downloadedBytes, int progress) {
+                    AsyncDownloadRequest.this.progressDialog.setMessage(
+                            AsyncDownloadRequest.this.message + " - " + progress + "%");
                 }
             });
 

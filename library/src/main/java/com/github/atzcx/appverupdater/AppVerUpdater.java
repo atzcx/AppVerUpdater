@@ -21,6 +21,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
@@ -28,15 +29,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.StringRes;
 import android.text.TextUtils;
 import android.util.Log;
-import android.widget.Toast;
 
-import com.github.atzcx.appverupdater.enums.UpdateErrors;
-import com.github.atzcx.appverupdater.interfaces.DialogListener;
-import com.github.atzcx.appverupdater.interfaces.DownloadListener;
-import com.github.atzcx.appverupdater.interfaces.RequestListener;
-import com.github.atzcx.appverupdater.models.Update;
-import com.github.atzcx.appverupdater.utils.DialogUtils;
-import com.github.atzcx.appverupdater.utils.UpdaterUtils;
+import com.github.atzcx.appverupdater.callback.Callback;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
 
@@ -45,10 +39,12 @@ import java.util.ArrayList;
 
 public class AppVerUpdater {
 
+    public static final String TAG = "AppVerUpdater";
+
     private Context context;
     private String url;
-    private AsyncClient.AsyncStringRequest stringRequest;
-    private AsyncClient.AsyncDownloadRequest downloadRequest;
+    private HttpClient.AsyncStringRequest stringRequest;
+    private HttpClient.AsyncDownloadRequest downloadRequest;
 
     private CharSequence title_available;
     private CharSequence content_available;
@@ -62,6 +58,7 @@ public class AppVerUpdater {
 
     private boolean viewNotes = false;
     private boolean showNotUpdate = false;
+    private boolean cancelable = true;
 
     private Callback callback;
 
@@ -177,15 +174,29 @@ public class AppVerUpdater {
         return this;
     }
 
-    public AppVerUpdater setCallback(Callback listener){
+    public AppVerUpdater setCallback(Callback listener) {
         this.callback = listener;
+        return this;
+    }
+
+    public AppVerUpdater setAlertDialogCancelable(boolean isCancelable) {
+        this.cancelable = isCancelable;
         return this;
     }
 
     public AppVerUpdater build() {
         if (Build.VERSION.SDK_INT >= 23) {
             new TedPermission(context)
-                    .setPermissionListener(permissionListener)
+                    .setPermissionListener(new PermissionListener() {
+                        @Override
+                        public void onPermissionGranted() {
+                            update();
+                        }
+
+                        @Override
+                        public void onPermissionDenied(ArrayList<String> deniedPermissions) {
+                        }
+                    })
                     .setDeniedMessage(String.valueOf(denied_message))
                     .setDeniedCloseButtonText(android.R.string.ok)
                     .setGotoSettingButton(false)
@@ -197,100 +208,8 @@ public class AppVerUpdater {
         return this;
     }
 
-    public void onResume(Context context){
-        if (networkReceiver == null){
-            context.registerReceiver(networkReceiver, new IntentFilter(android.net.ConnectivityManager.CONNECTIVITY_ACTION));
-        }
-    }
-
-
-    public void onStop(Context context){
-        if (networkReceiver != null){
-            try {
-                context.unregisterReceiver(networkReceiver);
-                networkReceiver = null;
-            } catch (IllegalArgumentException e){
-                if (BuildConfig.DEBUG){
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
-    private BroadcastReceiver networkReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (!UpdaterUtils.isNetworkAvailable(context)){
-                if (downloadRequest != null && downloadRequest.get() != null && !downloadRequest.get().isCancelled()){
-                    downloadRequest.get().cancel();
-                    //failureCallback(UpdateErrors.NETWORK_DISCONNECTED);
-                }
-            }
-        }
-    };
-
-    private PermissionListener permissionListener = new PermissionListener() {
-        @Override
-        public void onPermissionGranted() {
-            update();
-        }
-
-        @Override
-        public void onPermissionDenied(ArrayList<String> deniedPermissions) {
-        }
-    };
-
-
-    private void update() {
-        stringRequest = new AsyncClient.AsyncStringRequest(context, url, new RequestListener() {
-            @Override
-            public void onSuccess(final Update update) {
-                ((Activity) context).runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-
-                        if (UpdaterUtils.isUpdateAvailable(UpdaterUtils.appVersion(context), update.getVersion())) {
-
-                            if (BuildConfig.DEBUG){
-                                Log.v(Constans.TAG, "Update...");
-                            }
-
-                            alertDialog = DialogUtils.showUpdateAvailableDialog(context, title_available,
-                                    formatContent(context, update), negativeText_available,
-                                    positiveText_available, message, update.getUrl(), new DialogListener() {
-                                        @Override
-                                        public void onDone() {
-                                            downloadUpdates(context, update.getUrl(), message);
-                                        }
-                                    });
-
-                            alertDialog.show();
-
-                        } else if (showNotUpdate) {
-
-                            alertDialog = DialogUtils.showUpdateNotAvailableDialog(context, title_not_available, content_not_available);
-                            alertDialog.show();
-
-                        }
-
-                    }
-                });
-            }
-
-            @Override
-            public void onFailure(UpdateErrors error) {
-                if (callback != null){
-                    failureCallback(error);
-                }
-            }
-        });
-
-        stringRequest.execute();
-    }
-
-    @Deprecated
-    public void stop(){
-        if (downloadRequest != null && downloadRequest.get() != null && !downloadRequest.get().isCancelled()){
+    public void stop() {
+        if (downloadRequest != null && downloadRequest.get() != null && !downloadRequest.get().isCancelled()) {
             downloadRequest.get().cancel();
         }
     }
@@ -301,32 +220,147 @@ public class AppVerUpdater {
         }
     }
 
-    private CharSequence formatContent(Context context, Update update) {
+    public void onResume(Context context) {
+        if (networkReceiver == null) {
+            context.registerReceiver(networkReceiver, new IntentFilter(android.net.ConnectivityManager.CONNECTIVITY_ACTION));
+        }
+    }
+
+    public void onStop(Context context) {
+        if (networkReceiver != null) {
+            try {
+                context.unregisterReceiver(networkReceiver);
+                networkReceiver = null;
+            } catch (IllegalArgumentException e) {
+                if (BuildConfig.DEBUG) {
+                    Log.e(TAG, "Exception: ", e);
+                }
+            }
+        }
+    }
+
+    private BroadcastReceiver networkReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (!LibraryUtils.isNetworkAvailable(context)) {
+                if (downloadRequest != null && downloadRequest.get() != null && !downloadRequest.get().isCancelled()) {
+                    downloadRequest.get().cancel();
+                }
+            }
+        }
+    };
+
+    private void update() {
+        try {
+            stringRequest = new HttpClient.AsyncStringRequest(context, url, new HttpCallback<UpdateInfo>() {
+                @Override
+                public void onSuccess(final UpdateInfo response) {
+                    ((Activity) context).runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+
+                            if (LibraryUtils.isUpdateAvailable(LibraryUtils.appVersion(context), response.getVersion())) {
+
+                                if (BuildConfig.DEBUG) {
+                                    Log.v(TAG, "UpdateInfo...");
+                                }
+
+                                if (cancelable){
+                                    alertDialog = new AlertDialog.Builder(context)
+                                            .setTitle(title_available)
+                                            .setMessage(formatContent(context, response))
+                                            .setPositiveButton(positiveText_available, new DialogInterface.OnClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialogInterface, int i) {
+                                                    downloadUpdates(context, response.getUrl(), message);
+                                                }
+                                            })
+                                            .setNegativeButton(negativeText_available, new DialogInterface.OnClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialogInterface, int i) {
+                                                    dialogInterface.dismiss();
+                                                }
+                                            })
+                                            .create();
+                                } else {
+                                    alertDialog = new AlertDialog.Builder(context)
+                                            .setTitle(title_available)
+                                            .setMessage(formatContent(context, response))
+                                            .setPositiveButton(positiveText_available, new DialogInterface.OnClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialogInterface, int i) {
+                                                    downloadUpdates(context, response.getUrl(), message);
+                                                }
+                                            })
+                                            .setCancelable(cancelable)
+                                            .create();
+                                }
+
+                                alertDialog.show();
+
+                            } else if (showNotUpdate) {
+
+                                alertDialog = new AlertDialog.Builder(context)
+                                        .setTitle(title_not_available)
+                                        .setMessage(content_not_available)
+                                        .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialogInterface, int i) {
+                                                dialogInterface.dismiss();
+                                            }
+                                        }).create();
+
+
+                                alertDialog.show();
+
+                            }
+
+                        }
+                    });
+                }
+
+                @Override
+                public void onFailure(UpdateErrors error) {
+                    if (callback != null) {
+                        failureCallback(error);
+                    }
+                }
+            });
+
+            stringRequest.execute();
+        } catch (Exception e){
+            if (BuildConfig.DEBUG){
+                Log.e(TAG, "Exception: ", e);
+            }
+        }
+    }
+
+    private CharSequence formatContent(Context context, UpdateInfo update) {
         if (content_available != null && contentNotes_available != null) {
             if (this.viewNotes) {
                 if (update.getNotes() != null && !TextUtils.isEmpty(update.getNotes())) {
-                    return String.format(String.valueOf(contentNotes_available), UpdaterUtils.appName(context), update.getVersion(), update.getNotes());
+                    return String.format(String.valueOf(contentNotes_available), LibraryUtils.appName(context), update.getVersion(), update.getNotes());
                 }
             } else {
-                return String.format(String.valueOf(content_available), UpdaterUtils.appName(context), update.getVersion());
+                return String.format(String.valueOf(content_available), LibraryUtils.appName(context), update.getVersion());
             }
         }
         return content_available;
     }
 
-    private void downloadUpdates(final Context context, String url, CharSequence message){
-        downloadRequest = new AsyncClient.AsyncDownloadRequest(context, url, message, "update-" + UpdaterUtils.currentDate() + ".apk", new DownloadListener() {
+    private void downloadUpdates(final Context context, String url, CharSequence message) {
+        downloadRequest = new HttpClient.AsyncDownloadRequest(context, url, message, "update-" + LibraryUtils.currentDate() + ".apk", new HttpCallback<File>() {
             @Override
-            public void onSuccess(final File file) {
-                if (file != null){
-                    UpdaterUtils.installApkAsFile(context, file);
+            public void onSuccess(final File response) {
+                if (response != null) {
+                    LibraryUtils.installApkAsFile(context, response);
                 }
 
             }
 
             @Override
             public void onFailure(UpdateErrors error) {
-                if (callback != null){
+                if (callback != null) {
                     failureCallback(error);
                 }
             }
@@ -335,7 +369,7 @@ public class AppVerUpdater {
         downloadRequest.execute();
     }
 
-    private void failureCallback(final UpdateErrors error){
+    private void failureCallback(final UpdateErrors error) {
         ((Activity) context).runOnUiThread(new Runnable() {
             @Override
             public void run() {

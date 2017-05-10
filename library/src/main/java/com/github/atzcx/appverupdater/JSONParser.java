@@ -19,22 +19,19 @@ package com.github.atzcx.appverupdater;
 
 import android.util.Log;
 
-import com.github.atzcx.appverupdater.models.Update;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class JSONParser {
+class JSONParser {
 
     private static final String KEY_LATEST_VERSION = "newVersion";
     private static final String KEY_RELEASE_NOTES = "versionNotes";
     private static final String KEY_URL = "apkUrl";
 
-    public static Update parse(JSONObject jsonObject){
-
+    public static UpdateInfo parse(JSONObject jsonObject){
         try {
-            Update updateModel = new Update();
+            UpdateInfo updateModel = new UpdateInfo();
 
             String JsonNewVersion = jsonObject.getString(KEY_LATEST_VERSION).trim();
             String JsonApkUrl = jsonObject.getString(KEY_URL);
@@ -62,10 +59,9 @@ public class JSONParser {
 
         } catch (JSONException e){
             if (BuildConfig.DEBUG){
-                Log.e(Constans.TAG, "The JSON updater file is mal-formatted.");
+                Log.e(AppVerUpdater.TAG, "The JSON updater file is mal-formatted.");
             }
         }
-
 
         return null;
     }

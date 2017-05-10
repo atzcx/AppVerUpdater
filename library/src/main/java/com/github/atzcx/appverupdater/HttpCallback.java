@@ -16,8 +16,11 @@
 
 package com.github.atzcx.appverupdater;
 
-import com.github.atzcx.appverupdater.enums.UpdateErrors;
 
-public interface Callback {
+interface HttpCallback<T> {
+
+    void onSuccess(T response);
+
     void onFailure(UpdateErrors error);
+
 }

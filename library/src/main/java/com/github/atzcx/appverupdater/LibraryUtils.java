@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.github.atzcx.appverupdater.utils;
+package com.github.atzcx.appverupdater;
 
 import android.Manifest;
 import android.app.Activity;
@@ -26,37 +26,35 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.FileProvider;
 import android.util.Log;
 import android.widget.Toast;
-
-import com.github.atzcx.appverupdater.BuildConfig;
-import com.github.atzcx.appverupdater.Constans;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
-public class UpdaterUtils {
+class LibraryUtils {
 
-    public static String appName(Context context){
+    public static String appName(Context context) {
         return context.getString(context.getApplicationInfo().labelRes);
     }
 
-    public static String appPackageName(Context context){
+    public static String appPackageName(Context context) {
         return context.getApplicationContext().getPackageName();
     }
 
-    public static String currentDate(){
+    public static String currentDate() {
         Calendar c = Calendar.getInstance();
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
         return df.format(c.getTime());
     }
 
-    public static void showToast(Context context, String message){
+    public static void showToast(Context context, String message) {
         Toast.makeText(context, message, Toast.LENGTH_LONG).show();
     }
 
-    public static String appVersion(Context context){
+    public static String appVersion(Context context) {
         String version = null;
 
         try {
@@ -68,33 +66,31 @@ public class UpdaterUtils {
         return version;
     }
 
-    public static boolean isUpdateAvailable(String versionOld, String versionNew){
+    public static boolean isUpdateAvailable(String versionOld, String versionNew) {
         boolean res = false;
 
-        if (!versionOld.equals("0.0.0.0") && !versionNew.equals("0.0.0.0")){
+        if (!versionOld.equals("0.0.0.0") && !versionNew.equals("0.0.0.0")) {
             res = (versionCompare(versionOld, versionNew)) < 0;
         }
 
         return res;
     }
 
-
-    public static void installApkAsFile(Context context, File filePath){
-        if (filePath != null){
+    public static void installApkAsFile(Context context, File filePath) {
+        if (filePath != null) {
             Intent intent = new Intent(Intent.ACTION_VIEW);
-            if (Build.VERSION.SDK_INT >= 24){
-                intent = NougatUtils.formatFileProviderIntent(context, filePath, intent, "application/vnd.android.package-archive");
+            if (Build.VERSION.SDK_INT >= 24) {
+                intent = formatFileProviderIntent(context, filePath, intent, "application/vnd.android.package-archive");
             } else {
                 intent.setDataAndType(Uri.fromFile(filePath), "application/vnd.android.package-archive");
             }
             context.startActivity(intent);
         } else {
-           if (BuildConfig.DEBUG){
-               Log.v(Constans.TAG, "apk update not found");
-           }
+            if (BuildConfig.DEBUG) {
+                Log.v(AppVerUpdater.TAG, "apk update not found");
+            }
         }
     }
-
 
     public static boolean isNetworkAvailable(Context context) {
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -102,7 +98,7 @@ public class UpdaterUtils {
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
-    private static int versionCompare(String versionOld, String versionNew){
+    private static int versionCompare(String versionOld, String versionNew) {
 
         String[] vals1 = versionOld.split("\\.");
         String[] vals2 = versionNew.split("\\.");
@@ -129,10 +125,22 @@ public class UpdaterUtils {
                 ActivityCompat.requestPermissions((Activity) context, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
                 return false;
             }
-        }
-        else {
+        } else {
             return true;
         }
+    }
+
+    public static Intent formatFileProviderIntent(Context context, File file, Intent intent, String intentType) {
+        Uri uri = FileProvider.getUriForFile(context, context.getApplicationContext().getPackageName() + ".fileprovider", file);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        intent.setDataAndType(uri, intentType);
+        return intent;
+    }
+
+    public static Uri formatFileProviderUri(Context context, File file) {
+        Uri uri = FileProvider.getUriForFile(context, context.getApplicationContext().getPackageName() + ".fileprovider", file);
+        return uri;
     }
 
 }

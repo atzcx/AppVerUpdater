@@ -15,16 +15,16 @@
   -->
 
 <resources>
-    <!-- AlertDialog Update Available -->
+    <!-- AlertDialog UpdateInfo Available -->
     <string name="appverupdate_update_available">Доступно обновление!</string>
     <string name="appverupdater_content_update_available">Обновите мобильное приложени %1$s до версии %2$s</string>
     <string name="appverupdater_notes_update_available">Обновите мобильное приложени %1$s до версии %2$s \nИзменения: \n%3$s</string>
     <string name="appverupdater_positivetext_update_available">Обновить</string>
     <string name="appverupdater_negativetext_update_available">Позже</string>
-    <!-- AlertDialog Not Update Available -->
+    <!-- AlertDialog Not UpdateInfo Available -->
     <string name="appverupdate_not_update_available">Нет обновлений!</string>
     <string name="appverupdater_content_not_update_available">У вас установлена самая последняя версия приложения</string>
-    <!-- ProgressDialog Update Available -->
+    <!-- ProgressDialog UpdateInfo Available -->
     <string name="appverupdater_progressdialog_message_update_available">Загрузка обновлений</string>
     <!-- AlertDialog Denied Permissin -->
     <string name="appverupdater_denied_message">Если вы отвергнете разрешение, вы не сможете воспользоваться обновлением приложения. Данное разрешения нужно для загрузки и сохранения в память телефона новых обновлений.</string>

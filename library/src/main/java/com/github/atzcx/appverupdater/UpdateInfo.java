@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package com.github.atzcx.appverupdater.models;
+package com.github.atzcx.appverupdater;
 
-public class Update {
+public class UpdateInfo {
 
     private String version;
     private String url;
     private String notes;
 
-    public Update(){}
+    public UpdateInfo(){}
 
-    public Update(String version, String url, String notes) {
+    public UpdateInfo(String version, String url, String notes) {
         this.version = version;
         this.url = url;
         this.notes = notes;
@@ -56,7 +56,7 @@ public class Update {
 
     @Override
     public String toString() {
-        return "Update{" +
+        return "UpdateInfo{" +
                 "version='" + version + '\'' +
                 ", url='" + url + '\'' +
                 ", notes='" + notes + '\'' +
