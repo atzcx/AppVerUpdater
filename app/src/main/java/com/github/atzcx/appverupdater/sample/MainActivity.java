@@ -64,8 +64,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void update(){
 
-        appVerUpdater = new AppVerUpdater(MainActivity.this)
-                .setUpdateJSONUrl("http://192.168.0.110/update.json")
+        appVerUpdater = new AppVerUpdater()
+                .setUpdateJSONUrl("http://192.168.1.12/update.json")
                 .setShowNotUpdated(true)
                 .setViewNotes(false)
                 .setCallback(new Callback() {
@@ -91,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 })
                 .setAlertDialogCancelable(true)
-                .build();
+                .build(this);
 
     }
 

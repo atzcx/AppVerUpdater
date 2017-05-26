@@ -17,10 +17,14 @@
 package com.github.atzcx.appverupdater;
 
 
+import com.thin.downloadmanager.DownloadRequest;
+
 interface HttpCallback<T> {
 
     void onSuccess(T response);
 
     void onFailure(UpdateErrors error);
 
+    void onProgress(DownloadRequest downloadRequest, long totalBytes,
+                    long downloadedBytes, int progress);
 }
