@@ -16,9 +16,16 @@
 
 package com.github.atzcx.appverupdater;
 
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.DialogFragment;
+import android.app.Fragment;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.Environment;
 
 import com.thin.downloadmanager.DownloadRequest;
@@ -124,40 +131,30 @@ class HttpClient {
 
     }
 
-
     /**
      * Download the updates from the server
      */
 
     public static class AsyncDownloadRequest {
 
-        private Context context;
+        private Activity context;
         private String url;
 
         private CharSequence message;
         private String downloadFileName;
         private HttpCallback<File> listener;
-        private ProgressDialog progressDialog;
-
         private DownloadRequest downloadRequest;
 
-        public AsyncDownloadRequest(final Context context, String url, CharSequence message,
+        public AsyncDownloadRequest(final Activity context, String url, CharSequence message,
                                     String downloadFileName, HttpCallback<File> listener) {
             this.context = context;
             this.url = url;
             this.message = message;
             this.downloadFileName = downloadFileName;
             this.listener = listener;
-            this.progressDialog = new ProgressDialog(context);
-            this.progressDialog.setMessage(this.message);
-            this.progressDialog.setIndeterminate(true);
-            this.progressDialog.setCanceledOnTouchOutside(false);
-            this.progressDialog.setCancelable(false);
         }
 
-
         public void execute() {
-
             if (listener == null || context == null) {
                 return;
             } else if (LibraryUtils.isNetworkAvailable(context)) {
@@ -168,9 +165,6 @@ class HttpClient {
                 listener.onFailure(UpdateErrors.NETWORK_NOT_AVAILABLE);
                 return;
             }
-
-            this.progressDialog.show();
-
             Uri downloadUri = Uri.parse(this.url);
 
             final File SDCardRoot = new File(Environment.getExternalStorageDirectory()
@@ -194,7 +188,6 @@ class HttpClient {
             downloadRequest.setStatusListener(new DownloadStatusListenerV1() {
                 @Override
                 public void onDownloadComplete(DownloadRequest downloadRequest) {
-                    AsyncDownloadRequest.this.progressDialog.dismiss();
                     listener.onSuccess(new File(SDCardRoot, downloadFileName));
                 }
 
@@ -202,14 +195,12 @@ class HttpClient {
                 public void onDownloadFailed(DownloadRequest downloadRequest, int errorCode,
                                              String errorMessage) {
                     listener.onFailure(UpdateErrors.ERROR_DOWNLOADING_UPDATES);
-                    AsyncDownloadRequest.this.progressDialog.dismiss();
                 }
 
                 @Override
                 public void onProgress(DownloadRequest downloadRequest, long totalBytes,
                                        long downloadedBytes, int progress) {
-                    AsyncDownloadRequest.this.progressDialog.setMessage(
-                            AsyncDownloadRequest.this.message + " - " + progress + "%");
+                    listener.onProgress(downloadRequest, totalBytes, downloadedBytes, progress);
                 }
             });
 

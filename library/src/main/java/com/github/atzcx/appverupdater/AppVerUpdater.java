@@ -19,32 +19,36 @@ package com.github.atzcx.appverupdater;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.StringRes;
+import android.app.DialogFragment;
 import android.text.TextUtils;
 import android.util.Log;
 
 import com.github.atzcx.appverupdater.callback.Callback;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
+import com.thin.downloadmanager.DownloadRequest;
+import com.thin.downloadmanager.DownloadStatusListenerV1;
 
 import java.io.File;
 import java.util.ArrayList;
 
-public class AppVerUpdater {
+public class AppVerUpdater extends DialogFragment {
 
     public static final String TAG = "AppVerUpdater";
 
-    private Context context;
     private String url;
     private HttpClient.AsyncStringRequest stringRequest;
-    private HttpClient.AsyncDownloadRequest downloadRequest;
 
     private CharSequence title_available;
     private CharSequence content_available;
@@ -62,21 +66,24 @@ public class AppVerUpdater {
 
     private Callback callback;
 
-    private AlertDialog alertDialog;
+    private UpdateInfo response;
 
-    public AppVerUpdater(@NonNull Context context) {
-        this.context = context;
+    public AppVerUpdater() {
+        setRetainInstance(true);
+    }
 
-        this.title_available = this.context.getResources().getString(R.string.appverupdate_update_available);
-        this.content_available = this.context.getResources().getString(R.string.appverupdater_content_update_available);
-        this.contentNotes_available = this.context.getResources().getString(R.string.appverupdater_notes_update_available);
-        this.positiveText_available = this.context.getResources().getString(R.string.appverupdater_positivetext_update_available);
-        this.negativeText_available = this.context.getResources().getString(R.string.appverupdater_negativetext_update_available);
-        this.title_not_available = this.context.getResources().getString(R.string.appverupdate_not_update_available);
-        this.content_not_available = this.context.getResources().getString(R.string.appverupdater_content_not_update_available);
-        this.message = this.context.getResources().getString(R.string.appverupdater_progressdialog_message_update_available);
+    @Override
+    public void onAttach(Activity context) {
+        super.onAttach(context);
+        this.title_available = context.getResources().getString(R.string.appverupdate_update_available);
+        this.content_available = context.getResources().getString(R.string.appverupdater_content_update_available);
+        this.contentNotes_available = context.getResources().getString(R.string.appverupdater_notes_update_available);
+        this.positiveText_available = context.getResources().getString(R.string.appverupdater_positivetext_update_available);
+        this.negativeText_available = context.getResources().getString(R.string.appverupdater_negativetext_update_available);
+        this.title_not_available = context.getResources().getString(R.string.appverupdate_not_update_available);
+        this.content_not_available = context.getResources().getString(R.string.appverupdater_content_not_update_available);
+        this.message = context.getResources().getString(R.string.appverupdater_progressdialog_message_update_available);
         this.denied_message = context.getResources().getString(R.string.appverupdater_denied_message);
-
     }
 
     public AppVerUpdater setUpdateJSONUrl(@NonNull String url) {
@@ -90,7 +97,7 @@ public class AppVerUpdater {
     }
 
     public AppVerUpdater setAlertDialogUpdateAvailableTitle(@StringRes int titleRes) {
-        setAlertDialogUpdateAvailableTitle(this.context.getText(titleRes));
+        setAlertDialogUpdateAvailableTitle(getActivity().getText(titleRes));
         return this;
     }
 
@@ -100,7 +107,7 @@ public class AppVerUpdater {
     }
 
     public AppVerUpdater setAlertDialogUpdateAvailableContent(@StringRes int contentRes) {
-        setAlertDialogUpdateAvailableContent(this.context.getText(contentRes));
+        setAlertDialogUpdateAvailableContent(getActivity().getText(contentRes));
         return this;
     }
 
@@ -110,7 +117,7 @@ public class AppVerUpdater {
     }
 
     public AppVerUpdater setAlertDialogUpdateAvailablePositiveText(@StringRes int positiveTextRes) {
-        setAlertDialogUpdateAvailablePositiveText(this.context.getText(positiveTextRes));
+        setAlertDialogUpdateAvailablePositiveText(getActivity().getText(positiveTextRes));
         return this;
     }
 
@@ -120,7 +127,7 @@ public class AppVerUpdater {
     }
 
     public AppVerUpdater setAlertDialogUpdateAvailableNegativeText(@StringRes int negativeTextRes) {
-        setAlertDialogUpdateAvailableNegativeText(this.context.getText(negativeTextRes));
+        setAlertDialogUpdateAvailableNegativeText(getActivity().getText(negativeTextRes));
         return this;
     }
 
@@ -130,7 +137,7 @@ public class AppVerUpdater {
     }
 
     public AppVerUpdater setProgressDialogUpdateAvailableMessage(@StringRes int messageRes) {
-        setProgressDialogUpdateAvailableMessage(this.context.getText(messageRes));
+        setProgressDialogUpdateAvailableMessage(getActivity().getText(messageRes));
         return this;
     }
 
@@ -140,7 +147,7 @@ public class AppVerUpdater {
     }
 
     public AppVerUpdater setAlertDialogNotUpdateAvailableTitle(@StringRes int titleRes) {
-        setAlertDialogNotUpdateAvailableTitle(this.context.getText(titleRes));
+        setAlertDialogNotUpdateAvailableTitle(getActivity().getText(titleRes));
         return this;
     }
 
@@ -150,7 +157,7 @@ public class AppVerUpdater {
     }
 
     public AppVerUpdater setAlertDialogNotUpdateAvailableContent(@StringRes int contentRes) {
-        setAlertDialogNotUpdateAvailableContent(this.context.getText(contentRes));
+        setAlertDialogNotUpdateAvailableContent(getActivity().getText(contentRes));
         return this;
     }
 
@@ -160,7 +167,7 @@ public class AppVerUpdater {
     }
 
     public AppVerUpdater setAlertDialogDeniedMessage(@StringRes int denied_messageRes) {
-        setAlertDialogDeniedMessage(this.context.getText(denied_messageRes));
+        setAlertDialogDeniedMessage(getActivity().getText(denied_messageRes));
         return this;
     }
 
@@ -184,13 +191,14 @@ public class AppVerUpdater {
         return this;
     }
 
-    public AppVerUpdater build() {
+    public AppVerUpdater build(final Activity context) {
+        onAttach(context);
         if (Build.VERSION.SDK_INT >= 23) {
             new TedPermission(context)
                     .setPermissionListener(new PermissionListener() {
                         @Override
                         public void onPermissionGranted() {
-                            update();
+                            update(context);
                         }
 
                         @Override
@@ -203,21 +211,15 @@ public class AppVerUpdater {
                     .setPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                     .check();
         } else {
-            update();
+            update(context);
         }
         return this;
     }
 
-    public void stop() {
-        if (downloadRequest != null && downloadRequest.get() != null && !downloadRequest.get().isCancelled()) {
-            downloadRequest.get().cancel();
-        }
-    }
-
-    public void dismiss() {
-        if (alertDialog != null && alertDialog.isShowing()) {
-            alertDialog.dismiss();
-        }
+    public static void stop() {
+        if (progressDialogFragment.downloadRequest != null && progressDialogFragment.downloadRequest.get() != null
+            && !progressDialogFragment.downloadRequest.get().isCancelled())
+            progressDialogFragment.downloadRequest.get().cancel();
     }
 
     public void onResume(Context context) {
@@ -242,79 +244,89 @@ public class AppVerUpdater {
     private BroadcastReceiver networkReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (!LibraryUtils.isNetworkAvailable(context)) {
-                if (downloadRequest != null && downloadRequest.get() != null && !downloadRequest.get().isCancelled()) {
-                    downloadRequest.get().cancel();
-                }
-            }
+            if (!LibraryUtils.isNetworkAvailable(context)) stop();
         }
     };
 
-    private void update() {
+    @Override
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+        final Activity context = getActivity();
+        if (context == null) {
+            Log.w(TAG, "App updater's context is not available anymore, cannot proceed");
+            return null;
+        }
+
+        if (LibraryUtils.isUpdateAvailable(LibraryUtils.appVersion(context), response.getVersion())) {
+
+            if (BuildConfig.DEBUG) {
+                Log.v(TAG, "UpdateInfo...");
+            }
+
+            if (cancelable){
+                return new AlertDialog.Builder(context)
+                    .setTitle(title_available)
+                    .setMessage(formatContent(context, response))
+                    .setPositiveButton(positiveText_available, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            dialogInterface.dismiss();
+                            downloadUpdates(context, response.getUrl(), message);
+                        }
+                    })
+                    .setNegativeButton(negativeText_available, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            dialogInterface.dismiss();
+                        }
+                    })
+                    .create();
+            } else {
+                return new AlertDialog.Builder(context)
+                    .setTitle(title_available)
+                    .setMessage(formatContent(context, response))
+                    .setPositiveButton(positiveText_available, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            downloadUpdates(context, response.getUrl(), message);
+                        }
+                    })
+                    .setCancelable(cancelable)
+                    .create();
+            }
+
+        } else {
+            // show update not available
+            return new AlertDialog.Builder(context)
+                .setTitle(title_not_available)
+                .setMessage(content_not_available)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.dismiss();
+                    }
+                }).create();
+        }
+    }
+
+    private void update(final Activity context) {
+        // if progressdialogfragment exists, we are still in the middle of downloading, and likely the device was rotated
+        if (progressDialogFragment != null) {
+            progressDialogFragment.show(context.getFragmentManager(), "downloadprogress");
+            return;
+        }
+
         try {
             stringRequest = new HttpClient.AsyncStringRequest(context, url, new HttpCallback<UpdateInfo>() {
                 @Override
                 public void onSuccess(final UpdateInfo response) {
-                    ((Activity) context).runOnUiThread(new Runnable() {
+                    AppVerUpdater.this.response = response;
+                    context.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-
-                            if (LibraryUtils.isUpdateAvailable(LibraryUtils.appVersion(context), response.getVersion())) {
-
-                                if (BuildConfig.DEBUG) {
-                                    Log.v(TAG, "UpdateInfo...");
-                                }
-
-                                if (cancelable){
-                                    alertDialog = new AlertDialog.Builder(context)
-                                            .setTitle(title_available)
-                                            .setMessage(formatContent(context, response))
-                                            .setPositiveButton(positiveText_available, new DialogInterface.OnClickListener() {
-                                                @Override
-                                                public void onClick(DialogInterface dialogInterface, int i) {
-                                                    downloadUpdates(context, response.getUrl(), message);
-                                                }
-                                            })
-                                            .setNegativeButton(negativeText_available, new DialogInterface.OnClickListener() {
-                                                @Override
-                                                public void onClick(DialogInterface dialogInterface, int i) {
-                                                    dialogInterface.dismiss();
-                                                }
-                                            })
-                                            .create();
-                                } else {
-                                    alertDialog = new AlertDialog.Builder(context)
-                                            .setTitle(title_available)
-                                            .setMessage(formatContent(context, response))
-                                            .setPositiveButton(positiveText_available, new DialogInterface.OnClickListener() {
-                                                @Override
-                                                public void onClick(DialogInterface dialogInterface, int i) {
-                                                    downloadUpdates(context, response.getUrl(), message);
-                                                }
-                                            })
-                                            .setCancelable(cancelable)
-                                            .create();
-                                }
-
-                                alertDialog.show();
-
-                            } else if (showNotUpdate) {
-
-                                alertDialog = new AlertDialog.Builder(context)
-                                        .setTitle(title_not_available)
-                                        .setMessage(content_not_available)
-                                        .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialogInterface, int i) {
-                                                dialogInterface.dismiss();
-                                            }
-                                        }).create();
-
-
-                                alertDialog.show();
-
-                            }
-
+                            if (context.isFinishing()) return;
+                            if (LibraryUtils.isUpdateAvailable(LibraryUtils.appVersion(context), response.getVersion())
+                                || showNotUpdate)
+                                show(context.getFragmentManager(), "updater");
                         }
                     });
                 }
@@ -322,8 +334,12 @@ public class AppVerUpdater {
                 @Override
                 public void onFailure(UpdateErrors error) {
                     if (callback != null) {
-                        failureCallback(error);
+                        failureCallback(context, error);
                     }
+                }
+
+                @Override
+                public void onProgress(DownloadRequest downloadRequest, long totalBytes, long downloadedBytes, int progress) {
                 }
             });
 
@@ -348,28 +364,63 @@ public class AppVerUpdater {
         return content_available;
     }
 
-    private void downloadUpdates(final Context context, String url, CharSequence message) {
-        downloadRequest = new HttpClient.AsyncDownloadRequest(context, url, message, "update-" + LibraryUtils.currentDate() + ".apk", new HttpCallback<File>() {
+    public static class ProgressDialogFragment extends DialogFragment {
+        private ProgressDialog progressDialog = null;
+        HttpClient.AsyncDownloadRequest downloadRequest;
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            setRetainInstance(true);
+            progressDialog = new ProgressDialog(getActivity());
+            progressDialog.setIndeterminate(true);
+            progressDialog.setCanceledOnTouchOutside(false);
+            progressDialog.setCancelable(true);
+            return progressDialog;
+        }
+        @Override
+        public void onCancel(DialogInterface dialog) {
+            super.onCancel(dialog);
+            stop();
+        }
+
+        public void updateProgress(String message ) {
+            if (progressDialog != null) progressDialog.setMessage(message);
+        }
+    }
+
+    private static ProgressDialogFragment progressDialogFragment;
+
+    private void downloadUpdates(final Activity context, String url, final CharSequence message) {
+        progressDialogFragment = new ProgressDialogFragment();
+        progressDialogFragment.downloadRequest = new HttpClient.AsyncDownloadRequest(context, url, message, "update-" + LibraryUtils.currentDate() + ".apk", new HttpCallback<File>() {
             @Override
             public void onSuccess(final File response) {
                 if (response != null) {
                     LibraryUtils.installApkAsFile(context, response);
                 }
-
+                progressDialogFragment.dismiss();
+                progressDialogFragment = null;
             }
 
             @Override
             public void onFailure(UpdateErrors error) {
                 if (callback != null) {
-                    failureCallback(error);
+                    failureCallback(context, error);
                 }
+                progressDialogFragment.dismiss();
+                progressDialogFragment = null;
+            }
+
+            @Override
+            public void onProgress(DownloadRequest downloadRequest, long totalBytes,
+                            long downloadedBytes, int progress) {
+                progressDialogFragment.updateProgress(message + " - " + progress + "%");
             }
         });
-
-        downloadRequest.execute();
+        progressDialogFragment.downloadRequest.execute();
+        progressDialogFragment.show(context.getFragmentManager(), "downloadprogress");
     }
 
-    private void failureCallback(final UpdateErrors error) {
+    private void failureCallback(Context context, final UpdateErrors error) {
         ((Activity) context).runOnUiThread(new Runnable() {
             @Override
             public void run() {
