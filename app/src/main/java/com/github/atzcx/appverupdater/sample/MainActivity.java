@@ -96,10 +96,11 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     @Override
-                    public void onUpdateChecked() {
-                      // Happens after an update check, immediately after if update check was successful and there
-                      // were no dialogs, or, when an update dialog is presented and user explicitly dismissed the dialog.
-                      // Typically used for resetting next update check time
+                    public void onUpdateChecked(boolean downloading) {
+                        // Happens after an update check, immediately after if update check was successful and there
+                        // were no dialogs, or, when an update dialog is presented and user explicitly dismissed the dialog.
+                        // "downloading" is true if user accepted the update
+                        // Typically used for resetting next update check time
                     }
                 })
                 .setAlertDialogCancelable(true)
