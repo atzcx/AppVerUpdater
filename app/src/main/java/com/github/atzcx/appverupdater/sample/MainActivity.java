@@ -91,18 +91,15 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     @Override
-                    public void onCheckSuccess() {
-                        // for example, reset next update check time
-                    }
-
-                    @Override
                     public void onDownloadSuccess() {
                         // for example, record/reset license
                     }
 
                     @Override
-                    public void onUserClosedUpdateDialog() {
-                        // happens after onCheck if user react to the dialog - for example, reset next update check time
+                    public void onUpdateChecked() {
+                      // Happens after an update check, immediately after if update check was successful and there
+                      // were no dialogs, or, when an update dialog is presented and user explicitly dismissed the dialog.
+                      // Typically used for resetting next update check time
                     }
                 })
                 .setAlertDialogCancelable(true)

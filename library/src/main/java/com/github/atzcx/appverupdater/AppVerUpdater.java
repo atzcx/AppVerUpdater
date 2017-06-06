@@ -268,7 +268,7 @@ public class AppVerUpdater extends DialogFragment {
                     .setPositiveButton(positiveText_available, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
-                            callback.onUserClosedUpdateDialog();
+                            callback.onUpdateChecked();
                             dialogInterface.dismiss();
                             downloadUpdates(context, response.getUrl(), message);
                         }
@@ -276,6 +276,7 @@ public class AppVerUpdater extends DialogFragment {
                     .setNegativeButton(negativeText_available, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
+                            callback.onUpdateChecked();
                             dialogInterface.dismiss();
                         }
                     })
@@ -287,7 +288,7 @@ public class AppVerUpdater extends DialogFragment {
                     .setPositiveButton(positiveText_available, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
-                            callback.onUserClosedUpdateDialog();
+                            callback.onUpdateChecked();
                             dialogInterface.dismiss();
                             downloadUpdates(context, response.getUrl(), message);
                         }
@@ -304,7 +305,7 @@ public class AppVerUpdater extends DialogFragment {
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        callback.onUserClosedUpdateDialog();
+                        callback.onUpdateChecked();
                         dialogInterface.dismiss();
                     }
                 }).create();
@@ -327,10 +328,10 @@ public class AppVerUpdater extends DialogFragment {
                         @Override
                         public void run() {
                             if (context.isFinishing()) return;
-                            callback.onCheckSuccess();
                             if (LibraryUtils.isUpdateAvailable(LibraryUtils.appVersion(context), response.getVersion())
                                 || showNotUpdate)
                                 show(context.getFragmentManager(), "updater");
+                            else callback.onUpdateChecked();
                         }
                     });
                 }

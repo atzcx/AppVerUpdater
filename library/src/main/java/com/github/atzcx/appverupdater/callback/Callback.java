@@ -22,9 +22,7 @@ public interface Callback {
 
     void onFailure(UpdateErrors error);
 
-    void onCheckSuccess();
+    void onUpdateChecked();
 
     void onDownloadSuccess();
-
-    void onUserClosedUpdateDialog();
 }
