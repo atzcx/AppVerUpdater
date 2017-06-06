@@ -25,4 +25,6 @@ public interface Callback {
     void onCheckSuccess();
 
     void onDownloadSuccess();
+
+    void onUserClosedUpdateDialog();
 }

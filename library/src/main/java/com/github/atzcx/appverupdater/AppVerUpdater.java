@@ -268,6 +268,7 @@ public class AppVerUpdater extends DialogFragment {
                     .setPositiveButton(positiveText_available, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
+                            callback.onUserClosedUpdateDialog();
                             dialogInterface.dismiss();
                             downloadUpdates(context, response.getUrl(), message);
                         }
@@ -286,6 +287,8 @@ public class AppVerUpdater extends DialogFragment {
                     .setPositiveButton(positiveText_available, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
+                            callback.onUserClosedUpdateDialog();
+                            dialogInterface.dismiss();
                             downloadUpdates(context, response.getUrl(), message);
                         }
                     })
@@ -301,6 +304,7 @@ public class AppVerUpdater extends DialogFragment {
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
+                        callback.onUserClosedUpdateDialog();
                         dialogInterface.dismiss();
                     }
                 }).create();

@@ -99,6 +99,11 @@ public class MainActivity extends AppCompatActivity {
                     public void onDownloadSuccess() {
                         // for example, record/reset license
                     }
+
+                    @Override
+                    public void onUserClosedUpdateDialog() {
+                        // happens after onCheck if user react to the dialog - for example, reset next update check time
+                    }
                 })
                 .setAlertDialogCancelable(true)
                 .build(this);
