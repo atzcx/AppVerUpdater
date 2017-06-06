@@ -89,6 +89,16 @@ public class MainActivity extends AppCompatActivity {
                         }
 
                     }
+
+                    @Override
+                    public void onCheckSuccess() {
+                        // for example, reset next update check time
+                    }
+
+                    @Override
+                    public void onDownloadSuccess() {
+                        // for example, record/reset license
+                    }
                 })
                 .setAlertDialogCancelable(true)
                 .build(this);
