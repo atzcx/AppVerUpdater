@@ -22,4 +22,7 @@ public interface Callback {
 
     void onFailure(UpdateErrors error);
 
+    void onUpdateChecked(boolean downloading);
+
+    void onDownloadSuccess();
 }

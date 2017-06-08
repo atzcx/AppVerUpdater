@@ -38,7 +38,6 @@ import com.github.atzcx.appverupdater.callback.Callback;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
 import com.thin.downloadmanager.DownloadRequest;
-import com.thin.downloadmanager.DownloadStatusListenerV1;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -269,6 +268,7 @@ public class AppVerUpdater extends DialogFragment {
                     .setPositiveButton(positiveText_available, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
+                            callback.onUpdateChecked(true);
                             dialogInterface.dismiss();
                             downloadUpdates(context, response.getUrl(), message);
                         }
@@ -276,6 +276,7 @@ public class AppVerUpdater extends DialogFragment {
                     .setNegativeButton(negativeText_available, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
+                            callback.onUpdateChecked(false);
                             dialogInterface.dismiss();
                         }
                     })
@@ -287,6 +288,8 @@ public class AppVerUpdater extends DialogFragment {
                     .setPositiveButton(positiveText_available, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
+                            callback.onUpdateChecked(true);
+                            dialogInterface.dismiss();
                             downloadUpdates(context, response.getUrl(), message);
                         }
                     })
@@ -302,6 +305,7 @@ public class AppVerUpdater extends DialogFragment {
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
+                        callback.onUpdateChecked(false);
                         dialogInterface.dismiss();
                     }
                 }).create();
@@ -327,6 +331,7 @@ public class AppVerUpdater extends DialogFragment {
                             if (LibraryUtils.isUpdateAvailable(LibraryUtils.appVersion(context), response.getVersion())
                                 || showNotUpdate)
                                 show(context.getFragmentManager(), "updater");
+                            else callback.onUpdateChecked(false);
                         }
                     });
                 }
@@ -394,6 +399,7 @@ public class AppVerUpdater extends DialogFragment {
         progressDialogFragment.downloadRequest = new HttpClient.AsyncDownloadRequest(context, url, message, "update-" + LibraryUtils.currentDate() + ".apk", new HttpCallback<File>() {
             @Override
             public void onSuccess(final File response) {
+                callback.onDownloadSuccess();
                 if (response != null) {
                     LibraryUtils.installApkAsFile(context, response);
                 }
