@@ -41,6 +41,7 @@ import com.thin.downloadmanager.DownloadRequest;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
 public class AppVerUpdater extends DialogFragment {
 
@@ -193,7 +194,8 @@ public class AppVerUpdater extends DialogFragment {
     public AppVerUpdater build(final Activity context) {
         onAttach(context);
         if (Build.VERSION.SDK_INT >= 23) {
-            new TedPermission(context)
+            new TedPermission()
+                    .with(context)
                     .setPermissionListener(new PermissionListener() {
                         @Override
                         public void onPermissionGranted() {
@@ -201,7 +203,7 @@ public class AppVerUpdater extends DialogFragment {
                         }
 
                         @Override
-                        public void onPermissionDenied(ArrayList<String> deniedPermissions) {
+                        public void onPermissionDenied(List<String> deniedPermissions) {
                         }
                     })
                     .setDeniedMessage(String.valueOf(denied_message))
