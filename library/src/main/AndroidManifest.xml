@@ -17,6 +17,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.github.atzcx.appverupdater">
 
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
     <application>
 
         <provider
