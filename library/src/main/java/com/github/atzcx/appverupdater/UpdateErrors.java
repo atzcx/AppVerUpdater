@@ -50,6 +50,12 @@ public enum UpdateErrors {
      * "The file containing information about the updates are empty.
      */
 
-    FILE_JSON_NO_DATA
+    FILE_JSON_NO_DATA,
+
+
+    /**
+     * User doesn't exists or authentication token expired.
+     */
+    ERROR_UNAUTHORIZED
 
 }

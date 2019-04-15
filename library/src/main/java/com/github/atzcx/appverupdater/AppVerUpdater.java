@@ -42,12 +42,15 @@ import com.thin.downloadmanager.DownloadRequest;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class AppVerUpdater extends DialogFragment {
 
     public static final String TAG = "AppVerUpdater";
 
     private String url;
+    private Map<String, String> headers;
+    private boolean hasHeaders = false;
     private HttpClient.AsyncStringRequest stringRequest;
 
     private CharSequence title_available;
@@ -88,6 +91,17 @@ public class AppVerUpdater extends DialogFragment {
 
     public AppVerUpdater setUpdateJSONUrl(@NonNull String url) {
         this.url = url;
+        return this;
+    }
+
+    /**
+     * Method to set a HashMap with headers. Like an authentication token for example.
+     * @param headers
+     * @return
+     */
+    public AppVerUpdater setHeaders(Map<String, String> headers) {
+        this.headers = headers;
+        this.hasHeaders = true;
         return this;
     }
 
@@ -322,7 +336,7 @@ public class AppVerUpdater extends DialogFragment {
         }
 
         try {
-            stringRequest = new HttpClient.AsyncStringRequest(context, url, new HttpCallback<UpdateInfo>() {
+            stringRequest = new HttpClient.AsyncStringRequest(context, url, headers, hasHeaders, new HttpCallback<UpdateInfo>() {
                 @Override
                 public void onSuccess(final UpdateInfo response) {
                     AppVerUpdater.this.response = response;

@@ -24,11 +24,24 @@
     tools:showIn="@layout/activity_main"
     android:padding="24dp">
 
-    <Button
-        android:id="@+id/btnUpdate"
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:text="@string/button_update"
-        android:layout_marginTop="20dp"/>
+        android:layout_height="match_parent">
+
+        <Button
+            android:id="@+id/btnUpdate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/button_update"
+            android:layout_marginTop="20dp"/>
+
+        <Button
+            android:id="@+id/btnUpdateWithHeaders"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/button_update_with_headers"/>
+
+    </LinearLayout>
 
 </android.support.v4.widget.NestedScrollView>
