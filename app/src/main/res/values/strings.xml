@@ -17,5 +17,6 @@
 <resources>
     <string name="app_name">AppVerUpdater</string>
     <string name="button_update">Check Update</string>
+    <string name="button_update_with_headers">Check Update With Headers</string>
     <string name="library_description">A library that checks for your apps updates on your own server. API 14+ required.</string>
 </resources>

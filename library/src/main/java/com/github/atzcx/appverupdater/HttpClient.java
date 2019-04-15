@@ -37,10 +37,12 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.Headers;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -56,19 +58,23 @@ class HttpClient {
 
         private Context context;
         private String url;
+        private Map<String, String> headers;
+        private boolean hasHeaders;
         private HttpCallback<UpdateInfo> listener;
         private OkHttpClient client;
         private Response response;
         private Request request;
 
-        public AsyncStringRequest(Context context, String url, HttpCallback<UpdateInfo> listener) {
+        public AsyncStringRequest(Context context, String url, Map<String, String> headers,
+                                  boolean hasHeaders, HttpCallback<UpdateInfo> listener) {
             this.context = context;
             this.url = url;
+            this.headers = headers;
+            this.hasHeaders = hasHeaders;
             this.listener = listener;
             this.client = new OkHttpClient.Builder()
                     .connectTimeout(10, TimeUnit.SECONDS)
                     .readTimeout(30, TimeUnit.SECONDS).build();
-
         }
 
         public void execute() {
@@ -85,9 +91,16 @@ class HttpClient {
             }
 
 
-            request = new Request.Builder()
-                    .url(this.url)
-                    .build();
+            if (hasHeaders) {
+                request = new Request.Builder()
+                        .url(this.url)
+                        .headers(Headers.of(headers))
+                        .build();
+            } else {
+                request = new Request.Builder()
+                        .url(this.url)
+                        .build();
+            }
 
             client.newCall(request).enqueue(new Callback() {
                 @Override
@@ -118,6 +131,10 @@ class HttpClient {
                         }
 
                     } else {
+
+                        if (response.code() == 401) {
+                            listener.onFailure(UpdateErrors.ERROR_UNAUTHORIZED);
+                        }
 
                         if (response.code() == 404) {
                             listener.onFailure(UpdateErrors.JSON_FILE_IS_MISSING);
